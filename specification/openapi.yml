@@ -1,0 +1,650 @@
+openapi: 3.0.3
+info:
+  title: Nutrition Praivcy - OpenAPI 3.0
+  description: |-
+    This is the API for Nutrition Privacy based on the OpenAPI 3.0 specification.
+  termsOfService: https://nutritionprivacy.de/terms/
+  contact:
+    email: support@nutritionprivacy.de
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.11
+externalDocs:
+  description: Find out more about Nutrition Privacy
+  url: https://nutritionprivacy.de
+servers:
+  - url: https://dev.nutritionprivacy.de
+tags:
+  - name: product
+    description: Everything related to products
+    externalDocs:
+      description: Find out more
+      url: http://nutritionprivacy.de
+paths:
+  /product/{productID}:
+    get:
+      tags:
+        - product
+      summary: Finds a product by ID
+      description: Finds a product by ID. A ID is either a barcode or a UUID.
+      operationId: getProductByID
+      parameters:
+        - name: productID
+          in: path
+          description: ID of product that needs to be fetched
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Invalid ID supplied
+        '404':
+          description: Product not found
+  /product:
+    get:
+      tags:
+        - product
+      summary: Finds products by text.
+      description: Finds products which have either the passed text as prefix in their name or brand.
+      operationId: searchByText
+      parameters:
+        - name: text
+          in: query
+          description: Text that gets checked via prefix against name or brand of the product.
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page of the search results.
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductsSearchResponse'
+
+        '400':
+          description: Invalid page
+    post:
+      tags:
+        - product
+      summary: Add a new product.
+      operationId: addProduct
+      requestBody:
+        description: Create a new product in the database
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+      responses:
+        '200':
+          description: Successful operation
+        '405':
+          description: Invalid input
+  /productPreviews:
+    get:
+      tags:
+        - product
+      summary: Returns all products as previews.
+      operationId: getAllProducts
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/plain:
+              schema:
+                type: string
+
+        '400':
+          description: Invalid page
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 88F14A16-364A-4D82-A327-028B18769194
+        barcode:
+          type: integer
+          minimum: 0
+          description: Barcode of the Product
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedValue'
+          example: [{value: Demo Product, languageCode: de-DE}]
+        brands:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedValue'
+          example: [{value: Demo Brand, languageCode: de-DE}]
+        servings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Serving'
+        totalQuantity:
+          $ref: '#/components/schemas/Quantity'
+        nutriments:
+          $ref: '#/components/schemas/Nutriments'
+        verified:
+          type: boolean
+        source:
+          type: string
+      required:
+        - id
+        - names
+        - unit
+        - totalQuantity
+        - nutriments
+        - verified
+        - source
+    Quantity:
+      type: object
+      properties:
+        unit:
+          type: string
+          example: g
+          enum:
+            - ml
+            - l
+            - microgram
+            - mg
+            - g
+            - kg
+        value:
+          type: integer
+          format: int64
+          example: 100
+      required:
+        - unit
+        - value
+    Serving:
+      type: object
+      description: Serving with underlying value per one <name>.
+      properties:
+        name:
+          type: string
+          example: portion
+          enum:
+            - portion
+            - slice
+            - cup
+        underlyingQuantity:
+          $ref: '#/components/schemas/Quantity'
+      required:
+        - name
+        - underlyingQuantity
+    Nutriments:
+      type: object
+      properties:
+        energy:
+          type: integer
+          minimum: 0
+          description: Energy measured in kcal
+        fats:
+          type: number
+          minimum: 0
+          description: Fats measured in gram
+        proteins:
+          type: integer
+          minimum: 0
+          description: Proteins measured in gram
+        carbohydrates:
+          type: number
+          minimum: 0
+          description: Carbohydrates measured in gram
+        fatDetails:
+          $ref: '#/components/schemas/Fats'
+        proteinsDetails:
+          $ref: '#/components/schemas/Proteins'
+        carbohydratesDetails:
+          $ref: '#/components/schemas/Carbohydrates'
+        vitamins:
+          $ref: '#/components/schemas/Vitamins'
+        minerals:
+          $ref: '#/components/schemas/Minerals'
+        misc:
+          $ref: '#/components/schemas/MiscaleanousNutriments'
+      required:
+        - energy
+        - fats
+        - proteins
+        - carbohydrates
+      xml:
+        name: nutriments
+
+    Vitamins:
+      type: object
+      properties:
+        vitaminA:
+          type: number
+          minimum: 0
+          description: Vitamin A measured in gram
+        vitaminB1:
+          type: number
+          minimum: 0
+          description: Vitamin B6 measured in gram
+        vitaminB2:
+          type: number
+          minimum: 0
+          description: Vitamin B6 measured in gram
+        vitaminPP:
+          type: number
+          minimum: 0
+          description: Vitamin PP measured in gram
+        vitaminB6:
+          type: number
+          minimum: 0
+          description: Vitamin B6 measured in gram
+        vitaminB9:
+          type: number
+          minimum: 0
+          description: Vitamin B9 measured in gram
+        vitaminB12:
+          type: number
+          minimum: 0
+          description: Vitamin B12 measured in gram
+        vitaminC:
+          type: number
+          minimum: 0
+          description: Vitamin C measured in gram
+        vitaminD:
+          type: number
+          minimum: 0
+          description: Vitamin D measured in gram
+        vitaminE:
+          type: number
+          minimum: 0
+          description: Vitamin E measured in gram
+        vitaminK:
+          type: number
+          minimum: 0
+          description: Vitamin K measured in gram
+        betaCarotene:
+          type: number
+          minimum: 0
+          description: Beta carotene measured in gram
+        pantothenicAcid:
+          type: number
+          minimum: 0
+          description: Pantothenic acid (also known as Vitamin B5) measured in gram
+        biotin:
+          type: number
+          minimum: 0
+          description: Biotin (also known as Vitamin B8) measured in gram
+
+    Minerals:
+      type: object
+      properties:
+        calcium:
+          type: number
+          minimum: 0
+          description: Total calcium measured in <UNK>
+        phosphorus:
+          type: number
+          minimum: 0
+          description: Phosphorus measured in <UNK>
+        iron:
+          type: number
+          minimum: 0
+          description: Iron measured in <UNK>
+        magnesium:
+          type: number
+          minimum: 0
+          description: Magnesium measured in <UNK>
+        zinc:
+          type: number
+          minimum: 0
+          description: Zinc measured in <UNK>
+        copper:
+          type: number
+          minimum: 0
+          description: Copper measured in <UNK>
+        manganese:
+          type: number
+          minimum: 0
+          description: Manganese measured in <UNK>
+        fluoride:
+          type: number
+          minimum: 0
+          description: Fluoride measured in <UNK>
+        selenium:
+          type: number
+          minimum: 0
+          description: Selenium measured in <UNK>
+        iodine:
+          type: number
+          minimum: 0
+          description: Iodine measured in <UNK>
+        chromium:
+          type: number
+          minimum: 0
+          description: Chromium measured in <UNK>
+        molybdenum:
+          type: number
+          minimum: 0
+          description: Molybdenum measured in mg
+        salt:
+          type: number
+          minimum: 0
+          description: Salt measured in gram
+        chloride:
+          type: number
+          minimum: 0
+          description: Chloride measured in gram
+        bicarbonate:
+          type: number
+          minimum: 0
+          description: Bicarbonate measured in gram
+        potassium:
+          type: number
+          minimum: 0
+          description: Potassium measured in gram
+        sodium:
+          type: number
+          minimum: 0
+          description: Sodium measured in mg
+        silica:
+          type: number
+          minimum: 0
+          description: Silica measured in <UNK>
+
+
+    Proteins:
+      type: object
+      properties:
+        casein:
+          type: number
+          minimum: 0
+          description: Casein measured in gram
+        serumProteins:
+          type: number
+          minimum: 0
+          description: Serum proteins measured in gram
+
+    Carbohydrates:
+      type: object
+      properties:
+        sugars:
+          type: number
+          minimum: 0
+          description: Total sugars measured in gram
+        sucrose:
+          type: number
+          minimum: 0
+          description: Sucrose measured in gram
+        glucose:
+          type: number
+          minimum: 0
+          description: Glucose measured in gram
+        fructose:
+          type: number
+          minimum: 0
+          description: Fructose measured in gram
+        lactose:
+          type: number
+          minimum: 0
+          description: Lactose measured in gram
+        maltose:
+          type: number
+          minimum: 0
+          description: Maltose measured in gram
+        maltodextrins:
+          type: number
+          minimum: 0
+          description: Maltodextrins measured in gram
+        starch:
+          type: number
+          minimum: 0
+          description: Starch measured in gram
+        polyols:
+          type: number
+          minimum: 0
+          description: Polyols measured in gram
+    Fats:
+      type: object
+      properties:
+        saturatedFat:
+          type: number
+          minimum: 0
+          description: Saturated fat measured in gram
+        butyricAcid:
+          type: number
+          minimum: 0
+          description: Butyric acid measured in gram
+        caproicAcid:
+          type: number
+          minimum: 0
+          description: Caproic acid measured in gram
+        caprylicAcid:
+          type: number
+          minimum: 0
+          description: Caprylic acid measured in gram
+        capricAcid:
+          type: number
+          minimum: 0
+          description: Capric acid measured in gram
+        lauricAcid:
+          type: number
+          minimum: 0
+          description: Lauric acid measured in gram
+        myristicAcid:
+          type: number
+          minimum: 0
+          description: Myristic acid measured in gram
+        palmiticAcid:
+          type: number
+          minimum: 0
+          description: Palmitic acid measured in gram
+        stearicAcid:
+          type: number
+          minimum: 0
+          description: Stearic acid measured in gram
+        arachidicAcid:
+          type: number
+          minimum: 0
+          description: Arachidic acid measured in gram
+        behenicAcid:
+          type: number
+          minimum: 0
+          description: Behenic acid measured in gram
+        lignocericAcid:
+          type: number
+          minimum: 0
+          description: Lignoceric acid measured in gram
+        ceroticAcid:
+          type: number
+          minimum: 0
+          description: Cerotic acid measured in gram
+        montanicAcid:
+          type: number
+          minimum: 0
+          description: Montanic acid measured in gram
+        melissicAcid:
+          type: number
+          minimum: 0
+          description: Melissic acid measured in gram
+        monounsaturatedFat:
+          type: number
+          minimum: 0
+          description: Monounsaturated fat measured in gram
+        polyunsaturatedFat:
+          type: number
+          minimum: 0
+          description: Polyunsaturated fat measured in gram
+        alphaLinolenicAcid:
+          type: number
+          minimum: 0
+          description: Alpha linolenic acid measured in gram
+        eicosapentaenoicAcid:
+          type: number
+          minimum: 0
+          description: Eicosapentaenoic acid measured in gram
+        docosahexaenoicAcid:
+          type: number
+          minimum: 0
+          description: Docosahexaenoic acid measured in gram
+        omega3Fat:
+          type: number
+          minimum: 0
+          description: Omega 3 fat measured in gram
+        omega6Fat:
+          type: number
+          minimum: 0
+          description: Omega 6 fat measured in gram
+        omega9Fat:
+          type: number
+          minimum: 0
+          description: Omega 9 fat measured in gram
+        arachidonicAcid:
+          type: number
+          minimum: 0
+          description: Arachidonic acid measured in gram
+        gammaLinolenicAcid:
+          type: number
+          minimum: 0
+          description: Gamma linolenic acid measured in gram
+        dihomoGammaLinolenicAcid:
+          type: number
+          minimum: 0
+          description: Dihomo gamma linolenic acid measured in gram
+        linoleicAcid:
+          type: number
+          minimum: 0
+          description: Linoleic Acid measured in gram
+        oleicAcid:
+          type: number
+          minimum: 0
+          description: Oleic Acid measured in gram
+        transFat:
+          type: number
+          minimum: 0
+          description: Trans fat measured in gram
+        cholesterol:
+          type: number
+          minimum: 0
+          description: Cholesterol measured in gram
+        elaidicAcid:
+          type: number
+          minimum: 0
+          description: Elaidic acid measured in gram
+        gondoicAcid:
+          type: number
+          minimum: 0
+          description: Gondoic acid measured in gram
+        meadAcid:
+          type: number
+          minimum: 0
+          description: Mead acid measured in gram
+        erucicAcid:
+          type: number
+          minimum: 0
+          description: Erucic acid measured in gram
+        nervonicAcid:
+          type: number
+          minimum: 0
+          description: Nervonic acid measured in gram
+
+    MiscaleanousNutriments:
+      type: object
+      properties:
+        caffeine:
+          type: number
+          minimum: 0
+          description: Caffeine measured in mg
+        taurine:
+          type: number
+          minimum: 0
+          description: Taurine measured in gram
+        nucleotides:
+          type: number
+          minimum: 0
+          description: Nucleotides measured in <UNK>
+        fiber:
+          type: number
+          minimum: 0
+          description: Fiber measured in <UNK>
+        alcohol:
+          type: number
+          minimum: 0
+          description: Alcohol measured in % vol
+
+    ProductsSearchResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        array:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+    LocalizedValue:
+      type: object
+      properties:
+        value:
+          type: string
+        languageCode:
+          type: string
+          format: locale
+          description: BCP 47 Code language code
+          example: 'de-DE'
+    ProductPreview:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 88F14A16-364A-4D82-A327-028B18769194
+        names:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedValue'
+          example: [{value: Demo Product, languageCode: de-DE}]
+        brands:
+          type: array
+          items:
+            $ref: '#/components/schemas/LocalizedValue'
+          example: [{value: Demo Brand, languageCode: de-DE}]
+        servings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Serving'
+        totalQuantity:
+          $ref: '#/components/schemas/Quantity'
+        calories:
+          type: integer
+          minimum: 0
+          description: Calories per 100g / 100ml measured in kcal
+        verified:
+          type: boolean
+      required:
+        - id
+        - names
+        - calories
+
+
+  requestBodies:
+    Product:
+      description: Product object that needs to be added to the database.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Product'
