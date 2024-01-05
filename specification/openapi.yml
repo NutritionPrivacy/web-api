@@ -95,22 +95,6 @@ paths:
           description: Successful operation
         '405':
           description: Invalid input
-  /productPreviews:
-    get:
-      tags:
-        - product
-      summary: Returns all products as previews.
-      operationId: getAllProducts
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            text/plain:
-              schema:
-                type: string
-
-        '400':
-          description: Invalid page
 
 components:
   schemas:
