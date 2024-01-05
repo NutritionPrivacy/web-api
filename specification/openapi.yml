@@ -95,6 +95,8 @@ paths:
           description: Successful operation
         '405':
           description: Invalid input
+        '409':
+          description: A Product with the id already exists 
 
 components:
   schemas:
