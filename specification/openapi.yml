@@ -189,7 +189,7 @@ components:
           minimum: 0
           description: Fats measured in gram
         proteins:
-          type: integer
+          type: number
           minimum: 0
           description: Proteins measured in gram
         carbohydrates:
