@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Nutrition Praivcy - OpenAPI 3.0
+  title: Nutrition Privacy - OpenAPI 3.0
   description: |-
     This is the API for Nutrition Privacy based on the OpenAPI 3.0 specification.
   termsOfService: https://nutritionprivacy.de/terms/
